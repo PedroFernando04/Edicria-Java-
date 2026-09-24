@@ -1,7 +1,8 @@
 package com.qqd.edicria.controllers.tabelasPrincipais;
 
 import com.qqd.edicria.dtos.request.tabelasAuxiliares.LoginRequestDTO;
-import com.qqd.edicria.dtos.request.tabelasPrincipais.UsuarioRequestDTO;
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioRequestDTO;
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioUpdateRequestDTO;
 import com.qqd.edicria.dtos.response.tabelasPrincipais.UsuarioResponseDTO;
 import com.qqd.edicria.services.tabelasPrincipais.UsuarioService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,12 +15,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/users")
@@ -51,6 +52,27 @@ public class UsuarioController {
                 .body(usuarioCriado);
     }
 
+    @GetMapping
+    public ResponseEntity<List<UsuarioResponseDTO>> getTodosUsuarios(){
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(usuarioService.getAllUsuarios());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponseDTO> atualizarUsuario(
+            @Valid @RequestBody UsuarioUpdateRequestDTO dto,
+            @PathVariable Long id
+    ) {
+            UsuarioResponseDTO usuarioAtualizado =
+                    usuarioService.atualizarUsuario(dto, id);
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(usuarioAtualizado);
+    }
+
+
     @PostMapping("/login")
     public ResponseEntity<Void> autenticarUsuario(
             @Valid @RequestBody LoginRequestDTO dto,
@@ -78,6 +100,19 @@ public class UsuarioController {
                 request,
                 response
         );
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ){
+        SecurityContextLogoutHandler logoutHandler =
+                new SecurityContextLogoutHandler();
+
+        logoutHandler.logout(request, response, null);
 
         return ResponseEntity.ok().build();
     }

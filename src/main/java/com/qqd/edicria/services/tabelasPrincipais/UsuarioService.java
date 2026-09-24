@@ -1,7 +1,7 @@
 package com.qqd.edicria.services.tabelasPrincipais;
 
-import com.qqd.edicria.dtos.request.tabelasAuxiliares.LoginRequestDTO;
-import com.qqd.edicria.dtos.request.tabelasPrincipais.UsuarioRequestDTO;
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioRequestDTO;
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioUpdateRequestDTO;
 import com.qqd.edicria.dtos.response.tabelasPrincipais.UsuarioResponseDTO;
 import com.qqd.edicria.entities.tabelasPrincipais.Usuario;
 import com.qqd.edicria.exceptions.tabelasPrincipais.Usuario.EmailJaCadastradoException;
@@ -11,6 +11,8 @@ import com.qqd.edicria.mappers.tabelasPrincipais.UsuarioMapper;
 import com.qqd.edicria.repositories.tabelasPrincipais.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UsuarioService {
@@ -47,35 +49,86 @@ public class UsuarioService {
         return usuarioMapper.toResponseDTO(usuario);
     }
 
-    public void atualizarUsuario(UsuarioRequestDTO dto, Integer id) {
+    public List<UsuarioResponseDTO> getAllUsuarios(){
+        List<Usuario> usuarios = usuarioRepository.findAll();
 
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        return usuarios.stream()
+                .map(usuario -> new UsuarioResponseDTO(
+                        usuario.getId(),
+                        usuario.getNome(),
+                        usuario.getEmail(),
+                        usuario.getGenero(),
+                        usuario.getPaisOrigem(),
+                        usuario.getDataNascimento(),
+                        usuario.getAdm()
+                ))
+                .toList();
+    }
 
-        if(usuario != null){
+    public UsuarioResponseDTO atualizarUsuario(UsuarioUpdateRequestDTO dto, Long id) {
 
-            if(!usuario.getNome().equals(dto.nome())){
-                usuario.setNome(dto.nome());
-            }
-            if(!usuario.getEmail().equals(dto.email())){
-                usuario.setEmail(dto.email());
-            }
-            if(!passwordEncoder.matches(dto.senha(), usuario.getSenha())){
-                usuario.setSenha(passwordEncoder.encode(dto.senha()));
-            }
-            if(!usuario.getGenero().equals(dto.genero())){
-                usuario.setGenero(dto.genero());
-            }
-            if(!usuario.getPaisOrigem().equals(dto.pais())){
-                usuario.setPaisOrigem(dto.pais());
-            }
-            if(!usuario.getDataNascimento().equals(dto.dataNascimento())){
-                usuario.setDataNascimento(dto.dataNascimento());
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new UsuarioNaoEncontrado("Usuário não encontrado")
+                );
+
+        boolean alterou = false;
+
+        if(dto.nome() != null
+                && !usuario.getNome().equals(dto.nome())
+                && !dto.nome().isBlank()){
+
+            if(usuarioRepository.existsByNome(dto.nome())){
+                throw new NomeJaCadastradoException("Nome já cadastrado");
             }
 
+            usuario.setNome(dto.nome());
+            alterou = true;
+        }
+
+        if(dto.email() != null
+                && !usuario.getEmail().equals(dto.email())
+                && !dto.email().isBlank()){
+
+            if(usuarioRepository.existsByEmail(dto.email())){
+                throw new EmailJaCadastradoException("Email ja cadastrado");
+            }
+
+            usuario.setEmail(dto.email());
+            alterou = true;
+        }
+
+        if(dto.senha() != null
+                && !passwordEncoder.matches(dto.senha(), usuario.getSenha())
+                && !dto.senha().isBlank()){
+
+            usuario.setSenha(passwordEncoder.encode(dto.senha()));
+            alterou = true;
+        }
+        if(dto.genero() != null
+                && !usuario.getGenero().equals(dto.genero())){
+
+            usuario.setGenero(dto.genero());
+            alterou = true;
+        }
+        if(dto.pais() != null
+                && !usuario.getPaisOrigem().equals(dto.pais())){
+
+            usuario.setPaisOrigem(dto.pais());
+            alterou = true;
+        }
+        if(dto.dataNascimento() != null
+                && !usuario.getDataNascimento().equals(dto.dataNascimento())){
+
+            usuario.setDataNascimento(dto.dataNascimento());
+            alterou = true;
+        }
+
+
+        if(alterou){
             usuarioRepository.save(usuario);
         }
 
-        else throw new UsuarioNaoEncontrado("Usuário não encontrado");
-
+        return usuarioMapper.toResponseDTO(usuario);
     }
 }

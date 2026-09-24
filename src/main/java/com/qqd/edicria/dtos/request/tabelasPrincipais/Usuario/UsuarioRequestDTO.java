@@ -1,4 +1,4 @@
-package com.qqd.edicria.dtos.request.tabelasPrincipais;
+package com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario;
 
 import com.qqd.edicria.entities.enums.EnumGeneroPessoa;
 import com.qqd.edicria.entities.enums.EnumPaises;

@@ -1,6 +1,6 @@
 package com.qqd.edicria.mappers.tabelasPrincipais;
 
-import com.qqd.edicria.dtos.request.tabelasPrincipais.UsuarioRequestDTO;
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioRequestDTO;
 import com.qqd.edicria.dtos.response.tabelasPrincipais.UsuarioResponseDTO;
 import com.qqd.edicria.entities.tabelasPrincipais.Usuario;
 import org.springframework.stereotype.Component;

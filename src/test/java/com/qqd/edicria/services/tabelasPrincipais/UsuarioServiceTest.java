@@ -1,9 +1,12 @@
 package com.qqd.edicria.services.tabelasPrincipais;
 
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioUpdateRequestDTO;
 import com.qqd.edicria.dtos.response.tabelasPrincipais.UsuarioResponseDTO;
 import com.qqd.edicria.entities.enums.EnumGeneroPessoa;
 import com.qqd.edicria.entities.enums.EnumPaises;
 import com.qqd.edicria.entities.tabelasPrincipais.Usuario;
+import com.qqd.edicria.exceptions.tabelasPrincipais.Usuario.NomeJaCadastradoException;
+import com.qqd.edicria.exceptions.tabelasPrincipais.Usuario.UsuarioNaoEncontrado;
 import com.qqd.edicria.repositories.tabelasPrincipais.UsuarioRepository;
 import com.qqd.edicria.mappers.tabelasPrincipais.UsuarioMapper;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,11 +15,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.qqd.edicria.dtos.request.tabelasPrincipais.UsuarioRequestDTO;
+import com.qqd.edicria.dtos.request.tabelasPrincipais.Usuario.UsuarioRequestDTO;
 import com.qqd.edicria.exceptions.tabelasPrincipais.Usuario.EmailJaCadastradoException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,6 +42,8 @@ class UsuarioServiceTest {
 
     @InjectMocks
     private UsuarioService usuarioService;
+
+    //Cadastro
 
     @Test
     void deveLancarExceptionQuandoEmailJaEstiverCadastrado() {
@@ -169,6 +177,229 @@ class UsuarioServiceTest {
 
         verify(passwordEncoder).encode(dto.senha());
         assertEquals("senha-criptografada", usuario.getSenha());
+
+    }
+
+    //Update
+
+    @Test
+    void deveAlterarUsuarrioComSucesso(){
+
+        Long id = 1L;
+
+        Usuario usuario = new Usuario();
+        usuario.setNome("Pedro Fernando");
+        usuario.setEmail("pedro@email.com");
+
+        UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
+                "Pedro",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        UsuarioResponseDTO responseDTO = new UsuarioResponseDTO(
+                1L,
+                "Pedro",
+                "pedro@email.com",
+                null,
+                null,
+                null,
+                false
+        );
+
+        when(usuarioRepository.findById(id))
+                .thenReturn(Optional.of(usuario));
+
+        when(usuarioRepository.save(usuario))
+                .thenReturn(usuario);
+
+        when(usuarioMapper.toResponseDTO(usuario))
+                .thenReturn(responseDTO);
+
+        UsuarioResponseDTO resultado =
+                usuarioService.atualizarUsuario(dto, id);
+
+
+        assertNotNull(resultado);
+        assertEquals("Pedro", usuario.getNome());
+        assertEquals("pedro@email.com", usuario.getEmail());
+        assertSame(responseDTO, resultado);
+
+        verify(usuarioRepository).save(usuario);
+        verify(usuarioMapper).toResponseDTO(usuario);
+
+    }
+
+    @Test
+    void naoDeveAlterarComponenteIgual(){
+
+        Long id = 1L;
+        Usuario usuario = new Usuario();
+        usuario.setNome("Pedro");
+
+        UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
+                "Pedro",
+                null,
+                null,
+                null,
+                null,
+                null
+
+        );
+
+        UsuarioResponseDTO responseDTO = new UsuarioResponseDTO(
+                1L,
+                "Pedro",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        when(usuarioRepository.findById(id))
+                .thenReturn(Optional.of(usuario));
+
+        when(usuarioRepository.save(usuario))
+                .thenReturn(usuario);
+
+        when(usuarioMapper.toResponseDTO(usuario))
+                .thenReturn(responseDTO);
+
+        UsuarioResponseDTO resultado =
+                usuarioService.atualizarUsuario(dto, id);
+
+        assertNotNull(resultado);
+        assertEquals("Pedro", usuario.getNome());
+
+        verify(usuarioRepository).save(usuario);
+    }
+
+    @Test
+    void naoDeveAlterarComponenteNulo(){
+        Long id = 1L;
+        Usuario usuario = new Usuario();
+        usuario.setNome("Pedro");
+
+        UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        UsuarioResponseDTO responseDTO = new UsuarioResponseDTO(
+                1L,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+
+        );
+
+        when(usuarioRepository.findById(id))
+                .thenReturn(Optional.of(usuario));
+
+        when(usuarioMapper.toResponseDTO(usuario))
+                .thenReturn(responseDTO);
+
+        UsuarioResponseDTO resultado =
+                usuarioService.atualizarUsuario(dto, id);
+
+        assertNotNull(resultado);
+        assertEquals("Pedro", usuario.getNome());
+
+        verify(usuarioRepository, never()).save(usuario);
+    }
+
+    @Test
+    void deveLancarExceptionUsuarioNaoEncontrado(){
+        Long id = 1L;
+        Usuario usuario = new Usuario();
+        usuario.setNome("Pedro");
+
+        UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(
+                UsuarioNaoEncontrado.class,
+                () -> usuarioService.atualizarUsuario(dto, id)
+        );
+    }
+
+    @Test
+    void naoDeveAlterarNomeParaUmJaExistente(){
+
+        Long id = 1L;
+        Usuario usuario = new Usuario();
+        usuario.setNome("Pedro");
+
+        UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
+                "Fernando",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario));
+
+        when(usuarioRepository.existsByNome("Fernando")).thenReturn(true);
+
+        assertThrows(
+                NomeJaCadastradoException.class,
+                () -> usuarioService.atualizarUsuario(dto, id)
+        );
+
+        assertEquals("Pedro", usuario.getNome());
+
+        verify(usuarioRepository, never()).save(usuario);
+    }
+
+    //GET
+
+    @Test
+    void deveTrazerTodosUsuarios(){
+        Usuario usuario1 = new Usuario();
+        usuario1.setNome("Pedro");
+
+        Usuario usuario2 = new Usuario();
+        usuario2.setNome("Jorge");
+
+        Usuario usuario3 = new Usuario();
+        usuario3.setNome("Fernando");
+
+        when(usuarioRepository.findAll())
+                .thenReturn(Arrays.asList(usuario1, usuario2, usuario3));
+
+        List<UsuarioResponseDTO> resultado =
+                usuarioService.getAllUsuarios();
+
+        assertNotNull(resultado);
+        assertEquals(3, resultado.size());
+
+        assertEquals("Pedro", resultado.get(0).nome());
+        assertEquals("Jorge", resultado.get(1).nome());
+        assertEquals("Fernando", resultado.get(2).nome());
+
+        verify(usuarioRepository).findAll();
+
 
     }
 }
