@@ -1,6 +1,7 @@
 package com.qqd.edicria.entities.tabelasPrincipais;
 
-import com.qqd.edicria.entities.enums.livros.EnumGenerosLivro;
+import com.qqd.edicria.entities.enums.livros.EnumCategoriasLivro;
+import com.qqd.edicria.entities.enums.livros.EnumFormatoLivro;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +33,10 @@ public class Livro {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private EnumGenerosLivro genero;
+    private EnumCategoriasLivro categoria;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private EnumFormatoLivro formato;
 
 }

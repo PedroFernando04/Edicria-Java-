@@ -14,7 +14,7 @@ public class Editora {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = true)
+    @Column(nullable = false, unique = true)
     private String nome;
 
     @Column
