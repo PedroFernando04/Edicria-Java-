@@ -59,13 +59,20 @@ public class UsuarioController {
                 .body(usuarioService.getAllUsuarios());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> atualizarUsuario(
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioResponseDTO> getUsuario(@PathVariable Long id){
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(usuarioService.getUsuario(id));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> updateUsuario(
             @Valid @RequestBody UsuarioUpdateRequestDTO dto,
-            @PathVariable Long id
+            Authentication authentication
     ) {
             UsuarioResponseDTO usuarioAtualizado =
-                    usuarioService.atualizarUsuario(dto, id);
+                    usuarioService.updateUsuario(dto, authentication.getName());
 
             return ResponseEntity
                     .status(HttpStatus.OK)

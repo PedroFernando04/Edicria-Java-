@@ -65,9 +65,18 @@ public class UsuarioService {
                 .toList();
     }
 
-    public UsuarioResponseDTO atualizarUsuario(UsuarioUpdateRequestDTO dto, Long id) {
-
+    public UsuarioResponseDTO getUsuario(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new UsuarioNaoEncontrado("Usuário não encontrado")
+                );
+
+        return usuarioMapper.toResponseDTO(usuario);
+    }
+
+    public UsuarioResponseDTO updateUsuario(UsuarioUpdateRequestDTO dto, String email) {
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new UsuarioNaoEncontrado("Usuário não encontrado")
                 );

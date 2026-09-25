@@ -183,9 +183,7 @@ class UsuarioServiceTest {
     //Update
 
     @Test
-    void deveAlterarUsuarrioComSucesso(){
-
-        Long id = 1L;
+    void deveAlterarUsuarioComSucesso(){
 
         Usuario usuario = new Usuario();
         usuario.setNome("Pedro Fernando");
@@ -210,7 +208,7 @@ class UsuarioServiceTest {
                 false
         );
 
-        when(usuarioRepository.findById(id))
+        when(usuarioRepository.findByEmail("pedro@email.com"))
                 .thenReturn(Optional.of(usuario));
 
         when(usuarioRepository.save(usuario))
@@ -220,7 +218,7 @@ class UsuarioServiceTest {
                 .thenReturn(responseDTO);
 
         UsuarioResponseDTO resultado =
-                usuarioService.atualizarUsuario(dto, id);
+                usuarioService.updateUsuario(dto, "pedro@email.com");
 
 
         assertNotNull(resultado);
@@ -236,9 +234,9 @@ class UsuarioServiceTest {
     @Test
     void naoDeveAlterarComponenteIgual(){
 
-        Long id = 1L;
         Usuario usuario = new Usuario();
         usuario.setNome("Pedro");
+        usuario.setEmail("pedro@email.com");
 
         UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
                 "Pedro",
@@ -253,36 +251,35 @@ class UsuarioServiceTest {
         UsuarioResponseDTO responseDTO = new UsuarioResponseDTO(
                 1L,
                 "Pedro",
-                null,
+                "pedro@email.com",
                 null,
                 null,
                 null,
                 null
         );
 
-        when(usuarioRepository.findById(id))
+        when(usuarioRepository.findByEmail("pedro@email.com"))
                 .thenReturn(Optional.of(usuario));
-
-        when(usuarioRepository.save(usuario))
-                .thenReturn(usuario);
 
         when(usuarioMapper.toResponseDTO(usuario))
                 .thenReturn(responseDTO);
 
         UsuarioResponseDTO resultado =
-                usuarioService.atualizarUsuario(dto, id);
+                usuarioService.updateUsuario(dto, "pedro@email.com");
+
 
         assertNotNull(resultado);
         assertEquals("Pedro", usuario.getNome());
 
-        verify(usuarioRepository).save(usuario);
+        verify(usuarioRepository, never()).save(usuario);
     }
 
     @Test
     void naoDeveAlterarComponenteNulo(){
-        Long id = 1L;
+
         Usuario usuario = new Usuario();
         usuario.setNome("Pedro");
+        usuario.setEmail("pedro@email.com");
 
         UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
                 null,
@@ -304,14 +301,14 @@ class UsuarioServiceTest {
 
         );
 
-        when(usuarioRepository.findById(id))
+        when(usuarioRepository.findByEmail("pedro@email.com"))
                 .thenReturn(Optional.of(usuario));
 
         when(usuarioMapper.toResponseDTO(usuario))
                 .thenReturn(responseDTO);
 
         UsuarioResponseDTO resultado =
-                usuarioService.atualizarUsuario(dto, id);
+                usuarioService.updateUsuario(dto, "pedro@email.com");
 
         assertNotNull(resultado);
         assertEquals("Pedro", usuario.getNome());
@@ -321,9 +318,10 @@ class UsuarioServiceTest {
 
     @Test
     void deveLancarExceptionUsuarioNaoEncontrado(){
-        Long id = 1L;
+
         Usuario usuario = new Usuario();
         usuario.setNome("Pedro");
+        usuario.setEmail("pedro@email.com");
 
         UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
                 null,
@@ -334,20 +332,21 @@ class UsuarioServiceTest {
                 null
         );
 
-        when(usuarioRepository.findById(id)).thenReturn(Optional.empty());
+        when(usuarioRepository.findByEmail("pedro@email.com"))
+                .thenReturn(Optional.empty());
 
         assertThrows(
                 UsuarioNaoEncontrado.class,
-                () -> usuarioService.atualizarUsuario(dto, id)
+                () -> usuarioService.updateUsuario(dto, "pedro@email.com")
         );
     }
 
     @Test
     void naoDeveAlterarNomeParaUmJaExistente(){
 
-        Long id = 1L;
         Usuario usuario = new Usuario();
         usuario.setNome("Pedro");
+        usuario.setEmail("pedro@email.com");
 
         UsuarioUpdateRequestDTO dto = new UsuarioUpdateRequestDTO(
                 "Fernando",
@@ -358,13 +357,15 @@ class UsuarioServiceTest {
                 null
         );
 
-        when(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByEmail("pedro@email.com"))
+                .thenReturn(Optional.of(usuario));
 
-        when(usuarioRepository.existsByNome("Fernando")).thenReturn(true);
+        when(usuarioRepository.existsByNome("Fernando"))
+                .thenReturn(true);
 
         assertThrows(
                 NomeJaCadastradoException.class,
-                () -> usuarioService.atualizarUsuario(dto, id)
+                () -> usuarioService.updateUsuario(dto, "pedro@email.com")
         );
 
         assertEquals("Pedro", usuario.getNome());
